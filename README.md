@@ -1,221 +1,87 @@
-<div align="center">
+# OpenDots Codex
 
-# OpenDots
+**A self-hosted desktop AI workspace that uses your own signed-in Codex CLI account.** Run OpenDots on your computer; your Codex session stays in Codex on that computer.
 
-### A self-hosted desktop AI workspace for your own Codex CLI account.
+OpenDots Codex is an independent community project based on [CopilotKit/OpenDots](https://github.com/CopilotKit/OpenDots). It adds a local Codex CLI connection to OpenDots' personal AI workspace for conversations, documents, research, and specialist agents.
 
-**Run a personal AI workspace with your signed-in OpenAI Codex CLI account. Each user keeps their Codex session on their own computer.**
-
-OpenDots is an open-source, self-hosted AI agent workspace built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) and [AG-UI](https://docs.ag-ui.com/introduction). This version connects locally to Codex CLI, so each person runs their own server and keeps Codex credentials in their desktop profile. · [Get started](#get-started) · [Connect Codex](docs/SETUP.md#use-your-local-codex-account) · [Features](#features) · [Contributing](CONTRIBUTING.md)
-
-[![CI](https://github.com/CopilotKit/OpenDots/actions/workflows/ci.yml/badge.svg)](https://github.com/CopilotKit/OpenDots/actions/workflows/ci.yml)
+[![CI](https://github.com/Alif0x1/opendots-codex/actions/workflows/ci.yml/badge.svg)](https://github.com/Alif0x1/opendots-codex/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-![Alpha](https://img.shields.io/badge/status-alpha-orange.svg)
 
-Self-host it on the same desktop as Codex CLI. Your Codex credentials stay in Codex's local sign-in profile; OpenDots does not ask you to paste or upload a token.
+## What you can do
 
-[**Building on OpenDots? Meet with the CopilotKit team →**](https://www.copilotkit.ai/talk-to-an-engineer?ref=opendots_readme)
+- Chat with a personal Dot that uses the Codex account already signed in on your desktop.
+- Create focused specialist Dots with different instructions and permissions.
+- Organize conversations, notes, and pages in Spaces.
+- Research public web pages and save useful results in your workspace.
+- Extend the app with your own local tools and workflows.
 
-</div>
+## Install and run
 
----
+Each person runs their own OpenDots server on the same computer as their Codex CLI sign-in. Use Node.js 24 or newer, npm, and Git.
 
-<div align="center">
+### 1. Install and sign in to Codex CLI
 
-<table><tr><td>
-
-https://github.com/user-attachments/assets/4c74fe7d-ecdd-42dd-95da-5d34f9b9576e
-
-</td></tr></table>
-
-</div>
-
-_Ask → browse → approve → save. A live computer view and a human review card appear right in chat, then the approved draft becomes an editable Space page. Enlarged for readability; idle time is trimmed and playback is accelerated._
-
-## Overview
-
-OpenDots is a starting point for building your own agent workspace. Clone it, define your Dots, connect your services, and adapt the interface and tools to your needs.
-
-**A template, not a hosted product.** You run the application and configure its infrastructure. The template is in early development; the Features section below describes what's included and distinguishes local verification from connected-service testing.
-
-### Spaces
-
-A Space is a home for working documents. Dots appear separately in navigation and can be granted access to multiple Spaces in their settings. Each Dot has a default destination for saved pages; existing installations retain their original Space access. Browse pages in a searchable library, switch between grid and list views, and organize documents as nested subpages. Open a page in a focused visual editor with formatting, slash commands, and undo/redo. Write directly, save a conversation as a page, or ask a specialist to create and revise content.
-
-Pages stay in the local workspace database. Their conversations use CopilotKit Threads, with a separate conversation for each page and specialist. Page links connect the document workspace to Dot chat. Manual editing works before you configure conversation services. Autosave reports its progress, failed saves retain your draft, and revision checks prevent stale edits from overwriting newer content. Markdown source mode remains available.
-
-<div align="center">
-
-<table><tr><td>
-
-https://github.com/user-attachments/assets/d20c3405-4339-49e7-a799-43298728015c
-
-</td></tr></table>
-
-</div>
-
-_Open a Space, navigate to its launch brief, ask Scout about the saved page, and continue in Dot chat. This recording uses live page chat and example launch content._
-
-### Specialist Dots
-
-Give each Dot a name, role, instructions, and permitted tools. A researcher can investigate a topic; a writer can turn findings into a draft. Inspect their work and control what they can do.
-
-### Dot computers
-
-Each Dot can have its own computer, using [OpenBot](https://github.com/CopilotKit/OpenBot)'s container supervisor and computer service. Its browser profile and workspace files persist across stop/start. The Computer panel exposes browser control, human takeover, files, terminal output, and activity, with browser, file, and shell permissions set per Dot. The application keeps service credentials on the server and derives a different computer credential for each Dot.
-
-See [Computer setup](docs/COMPUTERS.md) to build the pinned services and connect your deployment. Computer tools require those services; an unconfigured template does not execute commands on your host.
-
-<div align="center">
-
-<table><tr><td>
-
-https://github.com/user-attachments/assets/30b691c3-0f66-4964-9fdb-67d4feab5568
-
-</td></tr></table>
-
-</div>
-
-_Ask Scout to open a website, summarize it, save notes, and verify the file. Every computer action in this demo is requested through chat; CopilotKit tool renderers show the live browser, saved file, and terminal output inline._
-
-### Review before saving
-
-Ask a Dot to show a draft before saving it. A CopilotKit human-in-the-loop card pauses the conversation for **Approve & save** or **Decline**. Approval creates the page in an authorized Space and returns a link; retries recover the same saved page. The agent continues after your decision.
-
-### Text and calls
-
-A continuous conversation keeps the Dot's avatar and status above the messages, with text and call controls close at hand. Work updates, source links, and call receipts appear in the timeline; a side panel shows results or the agent's computer.
-
-Calls pair realtime speech with a separate compute agent, so the conversation can continue while longer work runs. Both use the same conversation context and tool permissions. The call screen includes a live timer, separate user and Dot captions, microphone mute, speaker mute, and a minimized view for continuing in chat. Voice needs separate provider configuration.
-
-<div align="center">
-
-<table><tr><td>
-
-https://github.com/user-attachments/assets/3c06cf71-39ed-4e2b-b846-5463b2722389
-
-</td></tr></table>
-
-</div>
-
-_Connect, talk, mute, minimize, and return to chat. This is a silent screen capture of a real call, with waiting time trimmed and playback accelerated._
-
-### Slack
-
-Mention a Dot through a managed Slack connection using Channels SDK, then continue in its thread. The integration follows [OpenTag](https://github.com/CopilotKit/OpenTag), with an explicit workspace/user allowlist and a selected specialist. See [Slack setup](docs/SETUP.md#slack) to connect your deployment.
-
-<div align="center">
-
-<table><tr><td>
-
-https://github.com/user-attachments/assets/27d03a6c-a9e0-4c29-8d96-fafe0fbae20f
-
-</td></tr></table>
-
-</div>
-
-Bring your agents into Slack with [Channels SDK](https://github.com/CopilotKit/channels-sdk). See the [managed Channels documentation](https://docs.copilotkit.ai/intelligence/channels) to connect them through CopilotKit Intelligence.
-
-## Architecture
-
-### AG-UI connects the agent to the interface
-
-[AG-UI](https://docs.ag-ui.com/introduction) carries streamed messages, tool calls, and agent state between the backend and CopilotKit components. Computer activity appears inline as the agent works; human-in-the-loop cards pause a tool call for your decision before it continues.
-
-The template uses TanStack AI for model streaming and server-tool execution, CopilotKit's React SDK and runtime, Intelligence for durable Threads, and Channels SDK for Slack. Pages, application metadata, and background-work state are stored separately from conversation history.
-
-```mermaid
-flowchart TB
-  Web["Web app: pages, Spaces, Dots, chat"] -->|AG-UI| Runtime[CopilotKit runtime]
-  Slack[Slack] <--> Managed[Managed channel connection]
-  Managed <--> Channels[Channels SDK]
-  Channels --> Agents[Specialist compute agents]
-  Runtime --> Agents
-  Agents --> AI[TanStack AI]
-  AI --> Provider[OpenAI-compatible model provider]
-  Runtime <--> Intelligence["Intelligence / Threads"]
-  Channels <--> Intelligence
-  Web <--> Speech[Realtime speech]
-  Speech --> Bridge[Compute bridge]
-  Bridge --> Agents
-  Agents --> Controls[Tool permissions]
-  Controls --> Computer[Isolated browser / workspace]
-  Agents --> Jobs[Background work]
-  Runtime --> Metadata[(Pages, Spaces, Dots, work metadata)]
-```
-
-You configure the Intelligence project, model provider, and channel connection for your deployment; calls also need a speech provider. Credentials stay on the server. Missing configuration should produce a clear setup state, and test fixtures should remain visibly separate from live integrations.
-
-[OpenMuse](https://github.com/CopilotKit/OpenMuse) and [OpenBot](https://github.com/CopilotKit/openbot) are code references for persistent work, agent computers, and execution controls. OpenDots can be adapted to your own workflows and deployment choices.
-
-## Get started
-
-Use **Node.js 24** and **npm**:
+Follow the [official Codex CLI installation guide](https://github.com/openai/codex#readme). With npm:
 
 ```sh
-git clone https://github.com/CopilotKit/OpenDots.git
-cd OpenDots
+npm install -g @openai/codex
+codex login
+codex login status
+```
+
+Complete the ChatGPT sign-in in the browser. `codex login status` should confirm that the CLI is signed in.
+
+### 2. Install OpenDots Codex
+
+```sh
+git clone https://github.com/Alif0x1/opendots-codex.git
+cd opendots-codex
 npm ci
 cp .env.example .env
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. You can create Spaces, write pages, and configure Dots before connecting services. To chat using the Codex account on this desktop, install and sign in to Codex CLI, then choose **Connect Codex** in Settings; see [local Codex setup](docs/SETUP.md#use-your-local-codex-account). You can also configure a server-side conversation and model provider in `.env`.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). When the local server starts, OpenDots automatically checks the Codex CLI session and uses it if signed in. In **Settings & setup**, confirm Codex shows as connected. No API key or pasted token is needed for this local connection.
 
-See [Setup](docs/SETUP.md) for configuration, Slack, calls, the browser service, and Docker.
+For a production build on the same computer:
 
-## Features
+```sh
+npm run build
+npm start
+```
 
-| Area                       | Included                                                                                                                                |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Spaces and Specialist Dots | Saved names, role instructions, and per-Dot research and memory permissions                                                             |
-| Pages                      | Searchable library, visual editor, slash commands, autosave, and revision checks                                                        |
-| Conversations              | React SDK chat and Threads integration, page-specific conversations, and source links                                                   |
-| Local Codex account        | Connect the Codex CLI session on this desktop; each self-hosted user runs their own local server and account                            |
-| Slack                      | Managed Channels SDK declaration with workspace and user allowlists                                                                     |
-| Calls                      | WebRTC speech, delegated compute, bounded sessions, hangup, and timeline receipts                                                       |
-| Background work            | Scheduled server-side turns in their original conversation, with pause and retry controls                                               |
-| Browser                    | Separate read-only public-page service with page capture and navigation limits                                                          |
-| Dot computers              | Per-Dot browser profiles, files, shell, takeover, permissions, and action records through OpenBot                                       |
-| Memory                     | User-managed preferences that permitted Dots can use                                                                                    |
-| Automatic Learning         | Per-Dot Learning containers, conversation evidence routing, and published-skill delivery; see [setup](docs/SETUP.md#automatic-learning) |
-| Deployment                 | Local Node setup and separate application/browser containers                                                                            |
+Then open [http://127.0.0.1:4310](http://127.0.0.1:4310). Keep the server bound to `127.0.0.1`; this is a single-user desktop app, not a shared hosted service.
 
-Local checks cover setup, persistence, permissions, SDK failure handling, and browser isolation. Automated tests use service fixtures. **Live Intelligence, model responses, and page-context chat were verified on September 29, 2026.** Live OpenBot computer browsing, file creation, shell verification, and file persistence across stop/start were also verified locally. Live Realtime speech, call controls, and receipt persistence were verified locally on September 30, 2026. Slack and spoken compute delegation still need connected-service verification. See [recording notes](docs/demos/README.md) for the demonstrated flows and limits.
+### If OpenDots cannot find Codex CLI
 
-Automatic Learning routing and skill delivery are configured locally. Cloud schedules, eligible-thread counts, and published-skill delivery still need connected-service verification. Skills require review and publication in Intelligence; existing conversations without a container are not enrolled retroactively.
+If `codex login status` works but OpenDots does not detect the CLI, find its executable path and set it in `.env`:
 
-This is a single-owner starting point. Shared editing, invitations, file uploads, and interactive page embeds are not included. Schedules are recurring instructions, not a complete goal or event-trigger system. Specialist Dots have separate roles and conversations; multi-Dot group conversations and automatic delegation are further work.
+```dotenv
+CODEX_CLI_PATH=/absolute/path/to/codex
+```
 
-### Extending the template
+Use `command -v codex` on macOS/Linux or `where.exe codex` on Windows. Restart OpenDots after changing `.env`. The account must be signed in under the same operating-system user that runs the OpenDots server.
 
-- Add identity, Space membership, and shared page editing for multi-user deployments.
-- Add file attachments and richer page content.
-- Add event triggers and a persistent responsibility lifecycle.
-- Extend tools and approval flows for your own workflows.
-- Add richer artifacts, connected-app context, and specialist coordination.
+## How the local Codex connection works
 
-## Contributing
+OpenDots starts `codex app-server --stdio` on the same computer and asks it to verify the current account. It selects a model that the account reports as available, then sends conversation turns through that local app-server. OpenDots saves the mapping between its conversation and the Codex thread in its local SQLite database; Codex manages its own sign-in and thread history.
 
-See [Contributing](CONTRIBUTING.md) for development guidance and [Security](SECURITY.md) for reporting issues. Contributions should describe the workflow they enable, include verification evidence, and distinguish live integrations from fixtures.
+The app does not copy Codex credentials into browser storage or ask users to paste a session token. Each person needs their own local OpenDots process and Codex CLI sign-in. A Docker container or remote server cannot automatically use a desktop's Codex session. Do not expose this single-owner app to the public internet or share one server across users.
 
-## References
+This integration is also a pattern you can adapt: keep account authentication in the official local CLI, have your desktop app communicate with its supported local app-server interface, and pass only the tools and permissions your app intends to expose. See [`src/server/codex-app-server.ts`](src/server/codex-app-server.ts) and the [Codex setup guide](docs/SETUP.md#use-your-local-codex-account).
 
-- [AG-UI documentation](https://docs.ag-ui.com/introduction)
-- [CopilotKit documentation](https://docs.copilotkit.ai/intelligence/overview)
-- [Channels SDK](https://github.com/CopilotKit/channels-sdk)
-- [OpenMuse](https://github.com/CopilotKit/OpenMuse)
-- [OpenBot](https://github.com/CopilotKit/openbot)
-- [OpenTag](https://github.com/CopilotKit/OpenTag) — Channels SDK integration reference
+## Configure other services
 
-## License
+Codex chat works without configuring an API key. Other OpenDots features can use optional services configured in `.env`, including an OpenAI-compatible model provider, public web research, voice, Slack, and isolated browser/computer services. See [Setup](docs/SETUP.md) and [Computer setup](docs/COMPUTERS.md).
 
-[MIT](LICENSE).
+## Build your own version
 
-## Public-web research
+OpenDots Codex is a starting point for building a personal AI workspace. You can change the Dot instructions, add tools to `src/server/dot-agent.ts`, build new workspace screens, or adapt the local Codex app-server bridge for your own desktop workflows. Keep personal session credentials in Codex's own profile; never commit them or send them to a shared server.
 
-Parallel is selected by default in live research and Dot conversations. Ask a topic-only question to discover and read up to five sources, or supply URLs to extract them directly. Sources are saved with their links. A browser worker is not required for this research path; computer tools remain available for interactive work.
+This project is a single-owner template. It does not provide multi-user accounts, shared workspaces, or server-side Codex OAuth. If you add remote hosting, first design per-user identity, isolation, consent, and a supported way for each user's local Codex connection to communicate with that host.
 
-`WEB_SEARCH_PROVIDER=browser` preserves the existing URL-only browser reader, and `WEB_SEARCH_PROVIDER=disabled` disables these research tools. Workspace and Dot research permissions, pause and cancellation controls still apply. Sample research remains fictional and does not contact a provider.
+## Credits and license
 
-Queries, requested URLs, a stable session identifier and the research objective are sent to `https://search.parallel.ai/mcp`. Memories and complete conversations are not automatically forwarded to Parallel. Model-selected objectives may still contain context from the conversation. The anonymous service is free for light use with provider-managed limits; set `PARALLEL_API_KEY` on the server for production or higher limits. Provider errors and empty results are reported rather than replaced with invented evidence. See [Parallel Search MCP documentation](https://docs.parallel.ai/integrations/mcp/search-mcp).
+This project is derived from [CopilotKit/OpenDots](https://github.com/CopilotKit/OpenDots), an open-source workspace built with [CopilotKit](https://github.com/CopilotKit/CopilotKit) and [AG-UI](https://docs.ag-ui.com/introduction). Thank you to the original maintainers and contributors. The upstream project's MIT license and copyright notices are retained in [`LICENSE`](LICENSE).
+
+OpenDots Codex is an independent community project and is not an official CopilotKit or OpenAI product.

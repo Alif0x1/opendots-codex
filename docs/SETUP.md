@@ -43,7 +43,7 @@ This is a per-desktop setup, not a shared hosted login. Each person who wants to
 
    Find the path with `command -v codex` (macOS/Linux) or `where.exe codex` (Windows). Restart OpenDots after changing `.env`.
 
-4. In OpenDots, open **Settings & setup** and choose **Connect Codex**. A connected status means OpenDots can read the local Codex account. Start a new conversation and send a message to confirm model access.
+4. Start or restart OpenDots. It checks the signed-in Codex CLI account automatically when the local server starts. In **Settings & setup**, confirm that Codex shows as connected; use **Connect Codex** to retry the check if needed. Start a conversation and send a message to confirm model access.
 
 OpenDots checks the account through Codex's local app-server and chooses a model that the account currently reports as available. Conversation text and thread history remain in the local Codex profile; OpenDots stores the mapping from its conversation to the Codex thread in its SQLite database. To remove the connection, sign out with `codex logout` or stop the OpenDots server.
 
