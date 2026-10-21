@@ -206,6 +206,36 @@ From an allowed user, mention the bot and verify a response in the same Slack th
 
 Local tests exercise channel behavior with fixtures. A live Slack mention/reply remains unverified until you provision the managed connection and model credentials. [Channels SDK documentation](https://github.com/CopilotKit/channels-sdk) describes extending the adapter and channel behavior.
 
+## Telegram Bot
+
+OpenDots Codex includes a built-in Telegram Bot interface so you can chat with your desktop Dots and local Codex session directly from Telegram on mobile or desktop.
+
+1. Open Telegram and message [@BotFather](https://t.me/BotFather) to create a new bot:
+   - Send `/newbot` and follow the prompts to choose a bot name and username.
+   - Copy the bot token provided by BotFather.
+
+2. Add the token and optional allowlist to your `.env` file:
+
+   ```dotenv
+   TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+   # Optional: allowlist specific Telegram user IDs or usernames (comma-separated):
+   TELEGRAM_ALLOWED_USERS=12345678,your_username
+   # Optional: bind to a specific specialist Dot ID (defaults to initial Dot):
+   # TELEGRAM_DOT_ID=
+   ```
+
+3. Restart OpenDots with `npm run dev` (or `npm start`). The bot starts long-polling automatically.
+
+4. Open your bot in Telegram and send `/start`. Available commands include:
+   - `/start` - Welcome banner, status, and instructions
+   - `/status` - Diagnostic info (Codex CLI, model, workspace state)
+   - `/dots` - List available specialist Dots
+   - `/dot <name>` - Switch active Dot for this chat
+   - `/new` - Start a fresh conversation
+   - `/help` - Show command help
+
+Regular text messages are forwarded to your active Dot (and executed locally using your Codex CLI account or configured model), with typing indicators and response streaming.
+
 ## Calls
 
 The included speech adapter uses the Realtime API at `api.openai.com`. Set `VOICE_API_KEY` to a key with access to that API and `VOICE_MODEL` to a supported Realtime model (the local UI test used `gpt-realtime-2.1`); `VOICE_NAME` selects the voice. `OPENAI_BASE_URL` changes the compute model endpoint only, not speech. Calls use browser microphone access and WebRTC. Hosted deployments need HTTPS. The server mediates provider setup and delegates compute to the selected Dot's conversation.

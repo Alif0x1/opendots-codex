@@ -58,6 +58,12 @@ const config: PlatformConfig = {
     .map((value) => value.trim())
     .filter(Boolean),
   slackDotId: process.env.SLACK_DOT_ID || undefined,
+  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN?.trim() || undefined,
+  telegramAllowedUsers: (process.env.TELEGRAM_ALLOWED_USERS ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
+  telegramDotId: process.env.TELEGRAM_DOT_ID?.trim() || undefined,
   runtimeUrl: `http://${host === '::1' ? '[::1]' : '127.0.0.1'}:${port}/api/copilotkit`,
   ownerToken,
 };

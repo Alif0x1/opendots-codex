@@ -472,7 +472,11 @@ export function WorkspaceDialog({
                 )}
               </p>
               <p>
-                Slack: {workspace.setup.slack.replaceAll('_', ' ')}. Voice:{' '}
+                Slack: {workspace.setup.slack.replaceAll('_', ' ')}. Telegram:{' '}
+                {workspace.setup.telegram
+                  ? workspace.setup.telegram.replaceAll('_', ' ')
+                  : 'not configured'}
+                . Voice:{' '}
                 {workspace.setup.voice
                   ? 'configuration present'
                   : 'needs VOICE_API_KEY and VOICE_MODEL'}

@@ -120,6 +120,7 @@ export interface SetupStatus {
   voice: boolean;
   composio: boolean;
   slack: string;
+  telegram?: string;
   missing: string[];
 }
 export interface WorkspaceState {

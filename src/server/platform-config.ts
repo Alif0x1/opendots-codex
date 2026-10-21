@@ -71,6 +71,9 @@ export interface PlatformConfig extends WebConfig {
   slackTeam?: string;
   slackUsers: string[];
   slackDotId?: string;
+  telegramBotToken?: string;
+  telegramAllowedUsers?: string[];
+  telegramDotId?: string;
   runtimeUrl: string;
   ownerToken?: string;
 }
@@ -107,6 +110,7 @@ export function setupStatus(
     voice: !!(config.voiceKey && config.voiceModel && !missing.length),
     composio: !!config.composioApiKey,
     slack,
+    telegram: config.telegramBotToken ? 'online' : 'not_configured',
     missing,
   };
 }

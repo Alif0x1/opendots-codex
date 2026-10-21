@@ -25,6 +25,7 @@ import { validateRuntimeScope } from './runtime-scope.js';
 import { learningSelector } from './learning.js';
 import { CodexService } from './codex-app-server.js';
 import { SetupTelemetry } from './setup-telemetry.js';
+import { TelegramBotService } from './telegram-bot.js';
 export class Platform {
   private channelStartupFailed = false;
   private codexConnected = false;
@@ -33,6 +34,7 @@ export class Platform {
   readonly pages: PageService;
   readonly computers: ComputerService;
   readonly connections: ConnectionService;
+  readonly telegram?: TelegramBotService;
   readonly intelligence?: CopilotKitIntelligence;
   readonly handler?: CopilotHonoApp;
   constructor(
@@ -57,6 +59,9 @@ export class Platform {
       async (threadId) =>
         this.codex.readThread(this.workspace.codexThread(threadId)),
     );
+    if (config.telegramBotToken) {
+      this.telegram = new TelegramBotService(this, config);
+    }
     if (!config.intelligenceKey) return;
     this.intelligence = new CopilotKitIntelligence({
       apiKey: config.intelligenceKey,
@@ -155,6 +160,14 @@ export class Platform {
     } catch {
       this.codexConnected = false;
     }
+    if (this.telegram) {
+      await this.telegram.start().catch((err: unknown) => {
+        console.error(
+          'Telegram bot failed to start:',
+          err instanceof Error ? err.message : String(err),
+        );
+      });
+    }
     if (this.handler?.channels) {
       try {
         await this.handler.channels.ready({ timeoutMs: 15000 });
@@ -172,6 +185,7 @@ export class Platform {
   }
   async stop() {
     await this.setupTelemetry.stop();
+    await this.telegram?.stop();
     await this.handler?.channels?.stop();
   }
   async verifyCodex() {

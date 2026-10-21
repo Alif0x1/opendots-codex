@@ -79,6 +79,7 @@ This integration is also a pattern you can adapt: keep account authentication in
 | Pages                      | Searchable library, visual editor, slash commands, autosave, and revision checks                                                        |
 | Conversations              | React SDK chat and Threads integration, page-specific conversations, and source links                                                   |
 | Slack                      | Managed Channels SDK declaration with workspace and user allowlists                                                                     |
+| Telegram Bot               | Native long-polling bot, user allowlists, Dot switching, /status diagnostics, and chat turns                                            |
 | Calls                      | WebRTC speech, delegated compute, bounded sessions, hangup, and timeline receipts                                                       |
 | Background work            | Scheduled server-side turns in their original conversation, with pause and retry controls                                               |
 | Browser                    | Separate read-only public-page service with page capture and navigation limits                                                          |
