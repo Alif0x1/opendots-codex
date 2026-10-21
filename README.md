@@ -70,6 +70,25 @@ The app does not copy Codex credentials into browser storage or ask users to pas
 
 This integration is also a pattern you can adapt: keep account authentication in the official local CLI, have your desktop app communicate with its supported local app-server interface, and pass only the tools and permissions your app intends to expose. See [`src/server/codex-app-server.ts`](src/server/codex-app-server.ts) and the [Codex setup guide](docs/SETUP.md#use-your-local-codex-account).
 
+## Features
+
+| Area                       | Included                                                                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Local Codex Workspace      | Automatic local Codex CLI detection, app-server session routing, model auto-detection, zero-credential storage                          |
+| Spaces and Specialist Dots | Saved names, role instructions, and per-Dot research and memory permissions                                                             |
+| Pages                      | Searchable library, visual editor, slash commands, autosave, and revision checks                                                        |
+| Conversations              | React SDK chat and Threads integration, page-specific conversations, and source links                                                   |
+| Slack                      | Managed Channels SDK declaration with workspace and user allowlists                                                                     |
+| Calls                      | WebRTC speech, delegated compute, bounded sessions, hangup, and timeline receipts                                                       |
+| Background work            | Scheduled server-side turns in their original conversation, with pause and retry controls                                               |
+| Browser                    | Separate read-only public-page service with page capture and navigation limits                                                          |
+| Dot computers              | Per-Dot browser profiles, files, shell, takeover, permissions, and action records through OpenBot                                       |
+| Connections                | Per-Dot MCP servers, Composio connected apps, per-tool access, and owner approval for MCP write actions                                 |
+| Appearance                 | System, light, and dark themes; dark colors are derived at build time from the light styles                                             |
+| Memory                     | User-managed preferences that permitted Dots can use                                                                                    |
+| Automatic Learning         | Per-Dot Learning containers, conversation evidence routing, and published-skill delivery; see [setup](docs/SETUP.md#automatic-learning) |
+| Deployment                 | Local Node setup and separate application/browser containers                                                                            |
+
 ## Configure other services
 
 Codex chat works without configuring an API key. Other OpenDots features can use optional services configured in `.env`, including an OpenAI-compatible model provider, public web research, voice, Slack, and isolated browser/computer services. See [Setup](docs/SETUP.md) and [Computer setup](docs/COMPUTERS.md).

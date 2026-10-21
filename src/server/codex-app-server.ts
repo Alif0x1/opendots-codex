@@ -1,6 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { ToolDefinition } from '@copilotkit/runtime/v2';
 
@@ -70,9 +69,12 @@ class CodexAppServer {
     this.child.stdin.write(`${JSON.stringify(message)}\n`);
   }
 
-  private async request(method: string, params: unknown): Promise<any> {
+  private async request<T = unknown>(
+    method: string,
+    params: unknown,
+  ): Promise<T> {
     const id = ++this.nextId;
-    return new Promise((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error(`Codex ${method} request timed out.`));
@@ -80,7 +82,7 @@ class CodexAppServer {
       this.pending.set(id, {
         resolve: (value) => {
           clearTimeout(timer);
-          resolve(value);
+          resolve(value as T);
         },
         reject: (error) => {
           clearTimeout(timer);
@@ -95,6 +97,36 @@ class CodexAppServer {
         reject(error);
       }
     });
+  }
+
+  async listModels(): Promise<
+    Array<{ id: string; name: string; isDefault?: boolean }>
+  > {
+    await this.ready;
+    const modelResponse = (await this.request('model/list', {
+      includeHidden: false,
+    })) as {
+      data?: Array<{
+        id?: string;
+        model?: string;
+        displayName?: string;
+        isDefault?: boolean;
+      }>;
+      models?: Array<{
+        id?: string;
+        model?: string;
+        displayName?: string;
+        isDefault?: boolean;
+      }>;
+    };
+    const models = modelResponse.data ?? modelResponse.models ?? [];
+    return models
+      .map((m) => ({
+        id: m.id ?? m.model ?? '',
+        name: m.displayName ?? m.id ?? m.model ?? '',
+        isDefault: m.isDefault ?? false,
+      }))
+      .filter((m) => !!m.id);
   }
 
   private notify(method: string, params: unknown) {
@@ -172,14 +204,26 @@ class CodexAppServer {
       const modelResponse = (await this.request('model/list', {
         includeHidden: false,
       })) as {
-        data?: Array<{ id?: string; model?: string }>;
-        models?: Array<{ id?: string; model?: string }>;
+        data?: Array<{ id?: string; model?: string; isDefault?: boolean }>;
+        models?: Array<{ id?: string; model?: string; isDefault?: boolean }>;
       };
       const models = modelResponse.data ?? modelResponse.models ?? [];
+      const configuredModel = process.env.CODEX_MODEL?.trim();
       const model =
-        models.find((candidate) => candidate.id === 'gpt-5.6-luna') ??
+        (configuredModel &&
+          models.find(
+            (candidate) =>
+              (candidate.id ?? candidate.model) === configuredModel,
+          )) ||
+        models.find((candidate) => candidate.isDefault) ||
+        models.find((candidate) =>
+          (candidate.id ?? candidate.model)?.startsWith('gpt-6'),
+        ) ||
+        models.find(
+          (candidate) => (candidate.id ?? candidate.model) === 'gpt-5.6-luna',
+        ) ||
         models[0];
-      const modelId = model?.id ?? model?.model;
+      const modelId = configuredModel || (model?.id ?? model?.model);
       if (!modelId)
         throw new Error('Codex did not provide a model for this account.');
       const result = (await this.request('thread/start', {
@@ -322,18 +366,54 @@ function stringify(value: unknown): string {
 
 export class CodexService {
   private connected = false;
+  private currentModel?: string;
   constructor(private command = process.env.CODEX_CLI_PATH || 'codex') {}
 
   isConnected() {
     return this.connected;
   }
 
+  getModel() {
+    return this.currentModel;
+  }
+
+  async listModels() {
+    const server = new CodexAppServer(this.command);
+    try {
+      return await server.listModels();
+    } finally {
+      server.close();
+    }
+  }
+
   async verify() {
     const server = new CodexAppServer(this.command);
     try {
       const account = await server.account();
-      this.connected = account?.type === 'chatgpt';
-      return { connected: this.connected, accountType: account?.type ?? null };
+      this.connected =
+        !!account &&
+        typeof account.type === 'string' &&
+        account.type.length > 0;
+      let model = process.env.CODEX_MODEL?.trim();
+      try {
+        const models = await server.listModels();
+        const detected =
+          (model && models.find((m) => m.id === model)) ||
+          models.find((m) => m.isDefault) ||
+          models.find((m) => m.id.startsWith('gpt-6')) ||
+          models[0];
+        if (detected?.id) {
+          model = detected.id;
+          this.currentModel = detected.id;
+        }
+      } catch {
+        // model listing is optional during verify
+      }
+      return {
+        connected: this.connected,
+        accountType: account?.type ?? null,
+        model: model ?? this.currentModel,
+      };
     } catch (error) {
       this.connected = false;
       throw error;

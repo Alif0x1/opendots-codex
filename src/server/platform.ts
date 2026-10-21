@@ -1,4 +1,5 @@
 import { ComputerService } from './computer-service.js';
+import { ConnectionService } from './connections.js';
 import { PageService } from './page-service.js';
 import { randomUUID } from 'node:crypto';
 import {
@@ -15,16 +16,23 @@ import { Store } from './store.js';
 import { WorkspaceStore } from './workspace.js';
 import { DotAgent } from './dot-agent.js';
 import { runThreadTurn } from './headless.js';
-import { setupStatus, type PlatformConfig } from './platform-config.js';
+import {
+  INTELLIGENCE_KEY_MISSING_LABEL,
+  setupStatus,
+  type PlatformConfig,
+} from './platform-config.js';
 import { validateRuntimeScope } from './runtime-scope.js';
 import { learningSelector } from './learning.js';
 import { CodexService } from './codex-app-server.js';
+import { SetupTelemetry } from './setup-telemetry.js';
 export class Platform {
   private channelStartupFailed = false;
   private codexConnected = false;
   readonly codex = new CodexService();
+  readonly setupTelemetry: SetupTelemetry;
   readonly pages: PageService;
   readonly computers: ComputerService;
+  readonly connections: ConnectionService;
   readonly intelligence?: CopilotKitIntelligence;
   readonly handler?: CopilotHonoApp;
   constructor(
@@ -32,11 +40,13 @@ export class Platform {
     readonly workspace: WorkspaceStore,
     readonly config: PlatformConfig,
   ) {
+    this.setupTelemetry = new SetupTelemetry(store);
     this.computers = new ComputerService(
       workspace,
       config,
       () => store.settings().paused,
     );
+    this.connections = new ConnectionService(workspace.connections);
     this.pages = new PageService(
       workspace,
       () => {
@@ -47,16 +57,16 @@ export class Platform {
       async (threadId) =>
         this.codex.readThread(this.workspace.codexThread(threadId)),
     );
-    if (config.intelligenceKey)
-      this.intelligence = new CopilotKitIntelligence({
-        apiKey: config.intelligenceKey,
-        apiUrl: config.intelligenceApiUrl,
-        wsUrl: config.intelligenceWsUrl,
-        getLearningContainerId: learningSelector(
-          workspace,
-          config.slackDotId ?? workspace.dots()[0]?.id,
-        ),
-      });
+    if (!config.intelligenceKey) return;
+    this.intelligence = new CopilotKitIntelligence({
+      apiKey: config.intelligenceKey,
+      apiUrl: config.intelligenceApiUrl,
+      wsUrl: config.intelligenceWsUrl,
+      getLearningContainerId: learningSelector(
+        workspace,
+        config.slackDotId ?? workspace.dots()[0]?.id,
+      ),
+    });
     const channels = [];
     if (
       this.intelligence &&
@@ -73,7 +83,15 @@ export class Platform {
         ownerId: workspace.ownerId,
         paused: () => store.settings().paused,
         agent: () =>
-          new DotAgent(store, workspace, config, dotId, true, this.codex),
+          new DotAgent(
+            store,
+            workspace,
+            config,
+            dotId,
+            true,
+            this.codex,
+            this.setupTelemetry,
+          ),
       });
       channels.push(slack);
     }
@@ -83,12 +101,22 @@ export class Platform {
           .dots()
           .map((dot): [string, DotAgent] => [
             dot.id,
-            new DotAgent(store, workspace, config, dot.id, false, this.codex),
+            new DotAgent(
+              store,
+              workspace,
+              config,
+              dot.id,
+              false,
+              this.codex,
+              this.setupTelemetry,
+            ),
           ]),
       )) as unknown as AgentsConfig;
     const runtime = this.intelligence
       ? new CopilotRuntime({
           intelligence: this.intelligence,
+          telemetryId: this.setupTelemetry.identity,
+          telemetryProperties: this.setupTelemetry.metadata,
           identifyUser: async () => ({
             id: workspace.ownerId,
             name: 'OpenDots owner',
@@ -121,6 +149,7 @@ export class Platform {
       );
   }
   async start() {
+    this.setupTelemetry.start();
     try {
       this.codexConnected = (await this.codex.verify()).connected;
     } catch {
@@ -132,17 +161,27 @@ export class Platform {
         this.channelStartupFailed = false;
       } catch (error) {
         this.channelStartupFailed = true;
+        this.setupTelemetry.capture({
+          kind: 'setup_failed',
+          step: 'settings',
+          error_class: 'channel_start_failed',
+        });
         throw error;
       }
     }
   }
   async stop() {
+    await this.setupTelemetry.stop();
     await this.handler?.channels?.stop();
   }
   async verifyCodex() {
     const status = await this.codex.verify();
     this.codexConnected = status.connected;
-    return { connected: this.codexConnected };
+    return {
+      connected: this.codexConnected,
+      accountType: status.accountType,
+      model: status.model,
+    };
   }
   async createConversation(dotId: string, title: string) {
     this.requireReady();
@@ -199,7 +238,11 @@ export class Platform {
   async handle(request: Request): Promise<Response> {
     if (!this.handler)
       return Response.json(
-        { error: 'Conversation runtime unavailable.' },
+        {
+          error: this.codexConnected
+            ? 'Conversation runtime unavailable.'
+            : `Setup required: ${INTELLIGENCE_KEY_MISSING_LABEL}.`,
+        },
         { status: 503 },
       );
     let body: unknown;

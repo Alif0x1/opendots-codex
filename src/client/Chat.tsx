@@ -1,10 +1,16 @@
 import { PageReviewCard } from './PageReviewCard';
 import { pageReviewSchema, pageReviewTool } from '../shared/page-review';
+import {
+  connectionActionSchema,
+  connectionActionTool,
+} from '../shared/connection-types';
+import { ConnectionActionCard } from './ConnectionActionCard';
 import { contextualMessage, type PageContext } from './page-context';
 import { api } from './api';
 import type { Page } from '../server/pages';
 import type { Message } from '@ag-ui/core';
 import { useEffect, useRef, useState } from 'react';
+import { CopilotKitCoreErrorCode } from '@copilotkit/core';
 import {
   CopilotChatToolCallsView,
   useRenderTool,
@@ -31,6 +37,8 @@ import type { CallReceipt, Conversation, Dot } from '../shared/types';
 import { Mascot } from './Mascot';
 import { useVoice } from './useVoice';
 import { CallView } from './CallView';
+import { shouldSubmitComposerOnKeyDown } from './chat-composer';
+
 export function Chat({
   thread,
   dot,
@@ -93,6 +101,8 @@ export function Chat({
   const [source, setSource] = useState('');
   const [sourceOpen, setSourceOpen] = useState(false);
   const [error, setError] = useState('');
+  const [runError, setRunError] = useState('');
+  const chatError = error || runError;
   const [loaded, setLoaded] = useState(false);
   const [running, setRunning] = useState(false);
   const voice = useVoice(thread.id, onSaved, agent.messages.at(-1)?.id);
@@ -100,10 +110,22 @@ export function Chat({
   const bottom = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const subscription = copilotkit.subscribe({
-      onError: ({ error }) => setError(error.message),
+      onError: ({ error, code }) => {
+        if (
+          code === CopilotKitCoreErrorCode.AGENT_RUN_ERROR_EVENT ||
+          code === CopilotKitCoreErrorCode.AGENT_RUN_FAILED_EVENT ||
+          code === CopilotKitCoreErrorCode.AGENT_RUN_FAILED ||
+          code === CopilotKitCoreErrorCode.AGENT_THREAD_LOCKED
+        )
+          setRunError(error.message);
+        else setError(error.message);
+      },
     });
     const events = agent.subscribe({
-      onRunErrorEvent: ({ event }) => setError(event.message),
+      onRunErrorEvent: ({ event }) => setRunError(event.message),
+      onRunFinishedEvent: ({ outcome }) => {
+        if (outcome === 'success') setRunError('');
+      },
     });
     return () => {
       subscription.unsubscribe();
@@ -137,9 +159,10 @@ export function Chat({
   const send = async (text: string) => {
     if (!text.trim() || running || !loaded || !contextReady || paused) return;
     setError('');
+    setRunError('');
     setRunning(true);
     agent.addMessage({
-      id: crypto.randomUUID(),
+      id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
       role: 'user',
       content: contextualMessage(text, pageContext),
     });
@@ -154,7 +177,7 @@ export function Chat({
         );
       onSaved();
     } catch (e) {
-      setError(
+      setRunError(
         e instanceof Error
           ? e.message
           : 'The turn failed. Your conversation remains saved.',
@@ -186,6 +209,17 @@ export function Chat({
       ),
     },
     [thread.id, onSaved],
+  );
+  useHumanInTheLoop(
+    {
+      name: connectionActionTool.name,
+      description: connectionActionTool.description,
+      parameters: connectionActionSchema,
+      render: (props) => (
+        <ConnectionActionCard {...props} threadId={thread.id} />
+      ),
+    },
+    [thread.id],
   );
   const computerCalls = agent.messages.flatMap((message) =>
     message.role === 'assistant' ? (message.toolCalls ?? []) : [],
@@ -228,7 +262,9 @@ export function Chat({
           message.toolCalls?.some(
             (call) =>
               call.function.name.startsWith('computer_') ||
-              call.function.name === pageReviewTool.name,
+              call.function.name === 'COMPOSIO_MANAGE_CONNECTIONS' ||
+              call.function.name === pageReviewTool.name ||
+              call.function.name === connectionActionTool.name,
           ))),
   );
   return (
@@ -355,13 +391,14 @@ export function Chat({
           </button>
         </div>
       )}
-      {(error || voice.error) && (
+      {(chatError || voice.error) && (
         <div className="chat-error" role="alert">
-          {error || voice.error}
-          {error && (
+          {chatError || voice.error}
+          {chatError && (
             <button
               onClick={() => {
                 setError('');
+                setRunError('');
                 void copilotkit
                   .connectAgent({ agent })
                   .then(() => setLoaded(true))
@@ -425,7 +462,7 @@ export function Chat({
             maxLength={4000}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (shouldSubmitComposerOnKeyDown(e)) {
                 e.preventDefault();
                 e.currentTarget.form?.requestSubmit();
               }
